@@ -37,7 +37,8 @@ class StoreView(APIView):
             status=status.HTTP_400_BAD_REQUEST)
     
     def get(self, request, id=None):
-        query = f""" SELECT 
+        if id:
+            query = f""" SELECT 
                         datastore_store.id, datastore_store.title, datastore_store.address, 
                         datastore_store.company_id, datastore_company.id,datastore_company.title, 
                         datastore_company.manager_id, datastore_manager.id, datastore_manager.user_id, 
@@ -47,8 +48,22 @@ class StoreView(APIView):
                     INNER JOIN datastore_company ON datastore_store.company_id = datastore_company.id 
                     INNER JOIN datastore_manager ON datastore_company.manager_id = datastore_manager.id 
                     INNER JOIN auth_user ON datastore_manager.user_id = auth_user.id
-                    WHERE auth_user.id = {request.user.id}; 
-                """
+                    WHERE auth_user.id = {request.user.id}
+                    AND datastore_store.id = {id}; 
+                """    
+        else:
+            query = f""" SELECT 
+                            datastore_store.id, datastore_store.title, datastore_store.address, 
+                            datastore_store.company_id, datastore_company.id,datastore_company.title, 
+                            datastore_company.manager_id, datastore_manager.id, datastore_manager.user_id, 
+                            auth_user.id, auth_user.username,
+                            (SELECT title as products FROM datastore_product WHERE datastore_product.company_id = datastore_company.id)
+                        FROM datastore_store 
+                        INNER JOIN datastore_company ON datastore_store.company_id = datastore_company.id 
+                        INNER JOIN datastore_manager ON datastore_company.manager_id = datastore_manager.id 
+                        INNER JOIN auth_user ON datastore_manager.user_id = auth_user.id
+                        WHERE auth_user.id = {request.user.id}; 
+                    """
 
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -80,23 +95,43 @@ class ProductView(APIView):
             status=status.HTTP_400_BAD_REQUEST)
     
     def get(self, request, id=None):
-        query = f'''SELECT 
-                        datastore_product.id, datastore_product.barcode, 
-                        datastore_product.title, datastore_product.description, 
-                        datastore_product.price, datastore_product.quantity, 
-                        datastore_product.date_added, datastore_product.last_updated, 
-                        datastore_product.company_id, datastore_company.id,
-                        datastore_company.title as comapny_name, datastore_company.manager_id, 
-                        datastore_manager.id, datastore_manager.user_id, auth_user.id 
-                    FROM datastore_product 
-                    INNER JOIN datastore_company 
-                    ON (datastore_product.company_id = datastore_company.id) 
-                    INNER JOIN datastore_manager 
-                    ON (datastore_company.manager_id = datastore_manager.id) 
-                    INNER JOIN auth_user 
-                    ON (datastore_manager.user_id = auth_user.id)
-                    WHERE auth_user.id = {request.user.id};
-        '''
+        if id:
+            query = f'''SELECT 
+                            datastore_product.id, datastore_product.barcode, 
+                            datastore_product.title, datastore_product.description, 
+                            datastore_product.price, datastore_product.quantity, 
+                            datastore_product.date_added, datastore_product.last_updated, 
+                            datastore_product.company_id, datastore_company.id,
+                            datastore_company.title as comapny_name, datastore_company.manager_id, 
+                            datastore_manager.id, datastore_manager.user_id, auth_user.id 
+                        FROM datastore_product 
+                        INNER JOIN datastore_company 
+                        ON (datastore_product.company_id = datastore_company.id) 
+                        INNER JOIN datastore_manager 
+                        ON (datastore_company.manager_id = datastore_manager.id) 
+                        INNER JOIN auth_user 
+                        ON (datastore_manager.user_id = auth_user.id)
+                        WHERE auth_user.id = {request.user.id}
+                        AND datastore_product.id = {id};    
+                '''    
+        else:
+            query = f'''SELECT 
+                            datastore_product.id, datastore_product.barcode, 
+                            datastore_product.title, datastore_product.description, 
+                            datastore_product.price, datastore_product.quantity, 
+                            datastore_product.date_added, datastore_product.last_updated, 
+                            datastore_product.company_id, datastore_company.id,
+                            datastore_company.title as comapny_name, datastore_company.manager_id, 
+                            datastore_manager.id, datastore_manager.user_id, auth_user.id 
+                        FROM datastore_product 
+                        INNER JOIN datastore_company 
+                        ON (datastore_product.company_id = datastore_company.id) 
+                        INNER JOIN datastore_manager 
+                        ON (datastore_company.manager_id = datastore_manager.id) 
+                        INNER JOIN auth_user 
+                        ON (datastore_manager.user_id = auth_user.id)
+                        WHERE auth_user.id = {request.user.id};
+            '''
         with connection.cursor() as cursor:
             cursor.execute(query)
             row = dictfetchall(cursor)

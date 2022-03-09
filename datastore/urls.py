@@ -4,7 +4,9 @@ from .views import StoreView, ProductView, ProductAnalytics, StoreAnalytics
 
 urlpatterns = [
     path('stores/', StoreView.as_view()),
+    path('stores/<int:id>', StoreView.as_view()),
     path('products/', ProductView.as_view()),
+    path('products/<int:id>', ProductView.as_view()),
     path('analytics/products/', ProductAnalytics.as_view()),
     path('analytics/stores/', StoreAnalytics.as_view()),
     path('auth/', obtain_auth_token),
