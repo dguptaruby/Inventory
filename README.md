@@ -10,6 +10,7 @@ pip install -r requirements.txt
 Setup DB
 
 ```
+#  settings.py
 DATABASES  = {
 	'default': {
 	'ENGINE': 'django.db.backends.postgresql_psycopg2',
